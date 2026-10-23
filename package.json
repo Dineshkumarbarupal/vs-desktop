@@ -1,0 +1,9 @@
+{
+  "name": "flowcode-studio-optional-tooling",
+  "version": "0.34.0",
+  "private": true,
+  "description": "Optional TypeScript language service used by FlowCode Studio for JavaScript/TypeScript intelligence.",
+  "devDependencies": {
+    "typescript": "^5.8.3"
+  }
+}

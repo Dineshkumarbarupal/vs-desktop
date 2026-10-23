@@ -1,45 +1,77 @@
-# VS Desktop — FlowCode Studio
+# FlowCode Studio 0.34.0
 
-This repository is initialized for the FlowCode Studio desktop IDE project.
-
-## Current repository status
-
-The current GitHub commit contains this README only. The full source ZIP has **not** been uploaded into this repository yet. The connected GitHub operation available in this session can commit UTF-8 text, but it does not provide a direct binary-file upload from the local runtime; the runtime also cannot reach GitHub using ordinary `git push`.
-
-## Verified source bundle available from this conversation
-
-- **Release:** FlowCode Studio v0.34.0
-- **SHA-256:** `18b3d1b01195552dbc625ee2e1cae4d2993f5cefd02abcc0fa65f7a5cc6302cc`
-- [Download the source ZIP from this conversation](sandbox:/mnt/data/flowcode-studio-v0.34.0.zip)
-
-The archive contains the complete project directory, Python/Eel backend, HTML/CSS/JavaScript frontend, tests, sample workspace, requirements, launch scripts and documentation.
-
-## Publish the source to this repository from a machine with Git access
-
-1. Download and extract the ZIP.
-2. Open PowerShell in the extracted `flowcode-studio` directory.
-3. Run:
-
-```powershell
-git init
-git branch -M main
-git remote add origin https://github.com/Dineshkumarbarupal/vs-desktop.git
-git add .
-git commit -m "Add FlowCode Studio v0.34.0 source"
-git push -u origin main
-```
-
-If `origin` already exists, skip `git remote add origin`. GitHub authentication is required.
+A local-first desktop code editor inspired by common IDE patterns, built with **HTML, CSS, vanilla JavaScript, Python and Eel**. It is an original project and does not bundle Microsoft Visual Studio Code.
 
 ## Run on Windows
 
-1. Extract the ZIP.
-2. Double-click `run.bat`, or run `.`\`launch.ps1` from PowerShell.
+1. Extract the project ZIP.
+2. Install Python 3.10+ and Microsoft Edge or Google Chrome. On Windows, the launcher tries Edge first and falls back to Chrome.
+3. Double-click `run.bat`.
+4. On first launch, a `.venv` environment is created and Eel, Jedi and Black are installed. Internet is required for the first Python dependency installation; future starts skip reinstalling Python dependencies unless the project version changes or an import is missing. Node.js is optional except for JavaScript running/debugging. For compiler-backed JavaScript/TypeScript intelligence, install Node.js and run `npm install` in the extracted FlowCode Studio folder; `package.json` keeps TypeScript as an optional local tool. If TypeScript is not installed locally or globally, the editor falls back to basic word suggestions.
+5. Optional: after `.venv` has been created, close the app and run `.\.venv\Scripts\python.exe -m pip install -r requirements-win-pty.txt` in PowerShell to enable the Windows WinPTY shell adapter. The app still starts without this optional package.
 
-Python 3.10+ is required. Node.js is optional for JavaScript/TypeScript tooling.
+PowerShell alternative:
 
-## Verification note
+```powershell
+.\launch.ps1
+```
 
-The v0.34.0 source bundle passed its recorded backend suite and mocked-Eel UI smoke checks. Native Windows desktop launch has not been independently verified in this environment.
+Manual alternative:
 
-This is an original VS Code-inspired editor; it does not include or redistribute Microsoft Visual Studio Code.
+```powershell
+py -3 -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+.\.venv\Scripts\python.exe main.py
+```
+
+## Features
+
+### TypeScript Quick Fix / Code Actions (v0.34.0)
+
+For JavaScript/TypeScript files, use **Ctrl+.** or Edit → Quick Fix to request compiler-provided fixes for diagnostics on the current line. The editor displays available actions; selecting one opens a unified-diff preview across affected files, and **Apply Quick Fix** is a separate explicit step. The backend requires the active buffer to be saved first, limits actions to existing in-workspace JS/TS files (20 files per action, bounded file/batch sizes), refuses unsupported command/new-file edits, checks SHA-256 file baselines again before apply and uses atomic replacement with rollback. This is a small TypeScript compiler code-fix provider, not the full VS Code Code Action/LSP ecosystem.
+
+### Python conditional breakpoints (v0.33.0)
+
+In the built-in editor, right-click a Python gutter line to add or edit a condition such as `item == 3`; a regular left click still toggles a normal breakpoint. Conditions are expression-only, syntax-checked, capped at 300 characters, retained in local/session recovery state, and applied through Python's `bdb` debugger. Updating a breakpoint while paused sends the case-preserving condition to the worker. Node.js conditional breakpoints are not implemented yet; Node.js currently supports ordinary line breakpoints. Breakpoint conditions execute in the target program's debug context, so only use expressions you trust.
+
+### Git hunk operations (v0.32.0)
+
+Source Control can inspect a tracked text file as bounded diff hunks. Each hunk has a preview and explicit **Stage Hunk**, **Unstage Hunk**, and confirmed **Discard Hunk** actions, so unrelated changes in the same file can remain untouched. The backend reconstructs the patch from the current Git diff and verifies a SHA-256 hunk signature before applying it, refusing stale selections. Discard applies only the selected fresh unstaged patch and requires confirmation; it is blocked when the editor buffer is dirty. Hunk operations are limited to one tracked text file and a 1 MB diff; new/untracked and binary files should use normal whole-file staging.
+
+### Git merge-conflict resolution (v0.30.0)
+
+When an opened file contains standard Git conflict markers, the editor shows **Accept Current**, **Accept Incoming**, **Accept Both**, and **Next Conflict** controls. Standard and diff3-style (`||||||| base`) blocks are supported. Resolution edits the active unsaved buffer; save the file before staging or committing. The editor does not auto-commit or stage resolved changes.
+
+- VS Code-inspired workbench: activity bar, Explorer, tabs, editor area, minimap-style overview, integrated terminal panel, status bar and light/dark theme.
+- Native workspace and file pickers; Save As; recursive file tree; create/open/save/rename/delete files and folders; reveal workspace in the OS file manager.
+- Built-in lightweight text editor: line numbers, approximate syntax token colors for Python/JavaScript/HTML/CSS/JSON, paired brackets, auto-indent, Tab indentation and cursor position. Settings also has an optional **Load Monaco Editor** button which downloads Monaco Editor 0.57.0 from jsDelivr; this requires internet access and falls back to the built-in editor if unavailable.
+- Python-aware completion (`Ctrl+Space`), Go to Definition (`F12`), Find References (`Shift+F12`), symbol inspection (`Ctrl+Shift+Space`) and multi-file Rename Symbol (`F2`) powered by Jedi without executing the user’s program. JavaScript/TypeScript get compiler-backed completion, definition, references, hover, syntax diagnostics, Quick Fix code actions (Ctrl+.), document formatting and multi-file Rename Symbol when the TypeScript compiler is available. Project `tsconfig.json` compiler options (including `baseUrl` and `paths`) are honored for configured projects. Both rename workflows show a diff preview, require explicit apply, check file hashes before writing and roll back already-replaced files if a later replacement fails. Other languages use basic local-word suggestions in the built-in editor; Monaco mode adds its own editor completion, bracket guides and minimap. Also includes Command Palette, Quick Open, in-file Find/Replace, workspace file/content search, workspace-wide Find/Replace with diff preview and explicit Apply, Go to Line, word wrap, symbol Outline and a per-session Timeline. Workspace Go to Symbol (`Ctrl+T`) searches Python declarations via the AST plus lightweight JavaScript/TypeScript declarations, uses fuzzy ranking, and jumps to the matching file/line. Open unsaved source buffers are included; traversal skips dependency folders, ignores symlinks, and enforces scan/file/byte limits.
+- JSON formatting, Black-based Python formatting (88-column default), TypeScript-service JavaScript/TypeScript formatting, Python AST syntax diagnostics, JSON parsing diagnostics, basic HTML/CSS structure checks, XML parsing diagnostics, and JavaScript syntax checking with `node --check` when Node.js is installed. The Problems panel counts active-file errors/warnings and has an explicit **Check Workspace** action for bounded workspace-wide syntax scans; results show file/line/column and open the location when clicked.
+- Side-by-side HTML preview that inlines local workspace CSS/JavaScript into a sandboxed iframe, plus a safe Markdown preview renderer.
+- Outline symbols and session Timeline. UI settings (font size, word wrap, minimap, theme, Auto Save) and the last workspace persist through the Python backend, independent of the local browser port.
+- F5 runners for Python, Node.js scripts (`.js/.cjs/.mjs`), shell scripts (`.sh`) and Windows batch/PowerShell scripts when the runtime exists.
+- Source Control: initialize/status, path-scoped whole-file stage and unstage plus previewed per-hunk stage/unstage/discard for tracked text files, click-to-select changed files (including names with spaces and rename origins), working-tree/staged diffs, central side-by-side HEAD-vs-working-tree comparison with line numbers and added/removed line highlighting, recent history, local branch create/switch, commit, remote listing, fetch, fast-forward-only pull, push without force, local branch merge, unresolved-conflict list, and merge abort. Remote operations require Git remotes/credentials configured outside the app; fetch/pull/push are explicit user actions. Remote prompts are disabled for these calls so missing credentials fail instead of blocking the UI. Pull refuses non-fast-forward histories. Conflicts open at the first marker and display inline **Accept Current**, **Accept Incoming**, **Accept Both**, and **Next Conflict** controls for standard and diff3 blocks; save the resolved buffer, then stage and commit the file. Branch/merge/pull operations are blocked while any editor buffer is unsaved and clean open tabs reload after successful history changes.
+- Workspace tasks: discover, create, edit, delete, and run `shell` / `process` tasks from Run & Debug, with validated workspace-contained working directories, environment values, atomic `.vscode/tasks.json` writes, duplicate-label protection, and a 120-second timeout. The sample workspace includes Python run and syntax-check tasks.
+- Test Explorer: discover conventional Python (`test_*.py`, `*_test.py`) and Node.js (`*.test.*`, `*.spec.*`, `test-*.js`) tests and explicitly run Python tests, Node `--test`, or a root `package.json` `scripts.test` via npm. It saves dirty editor buffers before launching tests, uses bounded discovery and a 120-second run timeout, and displays output in the Testing activity. It is a lightweight runner, not the complete VS Code Testing API/adapter ecosystem; only run trusted workspace code.
+- Built-in Python debugger using a separate process and Node.js JavaScript debugger using the local Inspector protocol over loopback. Reads `.vscode/launch.json` launch configurations with file/program, args, working directory and environment variables; Node configurations also accept safe runtimeArgs. The Run & Debug panel can create, edit and delete supported Python/Node launch configurations with validation and atomic writes, preserving unrelated configuration metadata. `request: "launch"` only is supported (attach mode is not implemented): gutter breakpoints, continue, step into, step over, stop, current-line highlighting, local-variable snapshots, persistent Watch Expressions and debug console. Use F6 to start, F7 to continue, F8 to step over, F11 to step into and Shift+F5 to stop. JavaScript debugging requires Node.js and `websocket-client`; it is not a full Debug Adapter Protocol implementation.
+- Persistent PTY-backed shell session on POSIX, with chunk-based output so prompts appear without waiting for a newline. On Windows, install optional `requirements-win-pty.txt` for WinPTY; if unavailable, the shell uses a basic pipe fallback. The web input remains line-submitted (press Enter), so this is not a full xterm/ConPTY-compatible terminal UI.
+- Editor API rejects path traversal and symbolic links. Saves use an atomic same-directory replacement and track the on-disk SHA-256 baseline. If a file changes externally, the editor shows local/disk versions and offers Reload, Keep Editing, or an explicit confirmed Overwrite. File reads and editor writes are capped at 5 MB. Last workspace and UI settings persist in the per-user app state. Optional Auto Save supports a configurable 0.5–10 second delay and stays off by default.
+- Per-workspace session recovery restores up to 40 open tabs, the active tab, unsaved editor drafts, debugger breakpoints and Watch Expressions. Draft snapshots are written atomically under the per-user state directory (Windows: `%LOCALAPPDATA%\flowcode-studio`; Linux/macOS: `$XDG_STATE_HOME/flowcode-studio` or `~/.local/state/flowcode-studio`), not inside the source workspace. For privacy, recovery files remain local to the current OS user; keep in mind they contain source-code drafts. Draft recovery is bounded to roughly 1,000,000 combined characters per workspace snapshot; unusually large drafts may be excluded with a warning. If a recovered file changed or disappeared on disk, saving retains the previous hash so the normal conflict workflow protects newer content.
+- Bounded workspace-wide syntax diagnostics with unsaved-buffer support and clickable file/line navigation; failed saves now block Run and Preview instead of acting on stale disk content.
+- Backend regression tests, changelog and launcher scripts.
+
+## Tests
+
+Backend tests (no Eel desktop/browser is required):
+
+```powershell
+py -3 -m unittest discover -s tests -v
+```
+
+Optional browser smoke test: install `requirements-dev.txt`, install Playwright Chromium with `py -3 -m playwright install chromium`, then run `py -3 tests/ui_smoke.py`. Set `FLOWCODE_CHROMIUM` to a custom browser executable when needed.
+
+The 121-test backend unit suite covers workspace-wide diagnostics, workspace/user settings and session recovery, file lifecycle and traversal/symlink guards, atomic saves and stale-file conflicts, language diagnostics, Python and TypeScript code intelligence (including TypeScript semantic type diagnostics), cross-file rename and workspace replace previews/apply/rollback, script execution, task CRUD/configuration safety, real Python/Node debugger sessions, and safe per-hunk Git stage/unstage/discard with stale-selection refusal, launch-config args/cwd/env propagation, watch expressions, formatting, and Python/Node/npm Test Explorer discovery and execution against temporary projects. A mocked-Eel Playwright UI smoke test is available separately under `tests/ui_smoke.py`; it covers workspace diagnostics with unsaved buffers, click-to-open problems, save-conflict handling, debugging and session recovery, Git Source Control, per-hunk stage/unstage/discard, diff/remote workflows, workspace settings, Testing activity runner routing, Ctrl+T fuzzy symbol search/file-line navigation, launch-config editor CRUD interactions and TypeScript Quick Fix preview/apply, and workspace task editor create/update/delete/run interactions. To run it, install `requirements-dev.txt` and a Playwright Chromium browser. Workspace diagnostics skip dependency/build/cache folders and symlinks and are capped at 100 files, 12 MB total and a 12-second budget; very large projects can return partial results. Workspace settings are intentionally a small supported subset, not the full VS Code settings registry. Test discovery skips dependency/build/cache folders and symlinks, is capped at 300 test files / 20,000 scanned entries and depth 12, and each runner has a 120-second timeout; npm and test files execute project code after explicit user action. A real Windows Eel desktop launch has not been verified in this build environment.
+
+## Important limitations
+
+This project is **not a complete Visual Studio Code replacement**. Monaco is an optional, internet-loaded editor mode, not bundled into the ZIP; if the CDN cannot be reached, FlowCode falls back to its custom textarea editor. In the built-in editor, Python intelligence uses Jedi; JavaScript/TypeScript compiler-backed intelligence and Quick Fix code actions require Node.js and an installed TypeScript package, otherwise basic local-word/keyword suggestions are used. Syntax coloring remains regex-based. HTML/CSS validators provide basic structural warnings rather than full standards-compliant language services. The first-party debugger supports Python and Node.js JavaScript files, but not every language; both implementations are lightweight and are not a full Debug Adapter Protocol implementation. Monaco adds its own built-in language features, but does not provide full language-server-backed IntelliSense for every language. This release does not include full Language Server Protocol/IntelliSense, the VS Code extension marketplace or extension host, advanced Source Control workflows such as interactive rebase and cherry-pick, a complete Debug Adapter Protocol implementation or multi-language debugging, attach-mode launch configurations, notebooks, remote development, the full VS Code Testing API/adapters, or the full VS Code workspace-settings registry (only a small validated subset of `.vscode/settings.json` keys is supported). HTML preview inlines nearby local CSS and JavaScript into a sandboxed iframe; complex web apps with module imports, server routes, or assets outside the workspace may need a full development server. The integrated terminal has PTY support on POSIX and optional WinPTY support on Windows, but the browser UI submits entered lines rather than sending arbitrary key events, does not render terminal escape styling, and does not currently expose a resize API. Full-screen TUI programs and raw-key workflows may not work. If Windows WinPTY is absent, a pipe fallback works for basic shell commands but lacks terminal detection. If a shell session cannot start, one-shot command mode is used and its working directory resets per command. The Git features require Git installed/configured. The app runs local commands with the current OS user's permissions; only run trusted code and do not expose the Eel bridge to untrusted networks.

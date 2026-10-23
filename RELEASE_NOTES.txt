@@ -1,0 +1,16 @@
+FlowCode Studio 0.34.0
+
+Highlights:
+- Add TypeScript compiler-backed Quick Fix / Code Actions for JavaScript/TypeScript diagnostics on the current line.
+- Invoke Quick Fix with Ctrl+. or the Edit menu; choose among available actions, inspect a unified diff, then explicitly Apply or Cancel.
+- Require the active buffer to be saved before preview; restrict changes to existing workspace JS/TS files and reject new-file/command-based fixes.
+- Revalidate SHA-256 file baselines at apply time and apply through atomic multi-file replacement with rollback.
+- Preserve existing conditional Python breakpoints, Go to Symbol, workspace tasks, Test Explorer, Git merge conflict tools and per-hunk stage/unstage/discard.
+
+Verification:
+- Backend unit/integration suite: 121 tests passed.
+- Mocked-Eel Playwright UI smoke: passed; zero page errors and zero recovery errors.
+- Python compilation and JavaScript syntax checks: passed.
+- Release ZIP integrity/CRC check: passed.
+- TypeScript compiler is optional and must be installed for Quick Fix code actions.
+- Native Windows Eel desktop launch remains unverified in this Linux environment.

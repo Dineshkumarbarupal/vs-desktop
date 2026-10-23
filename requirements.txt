@@ -1,0 +1,4 @@
+eel>=0.18.2,<1.0
+jedi>=0.19,<1.0
+black>=24,<27
+websocket-client>=1.8,<2

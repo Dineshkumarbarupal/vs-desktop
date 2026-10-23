@@ -1,0 +1,7 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {"label": "Run Python sample", "type": "process", "command": "python", "args": ["main.py"], "group": "test"},
+    {"label": "Check Python syntax", "type": "process", "command": "python", "args": ["-m", "py_compile", "main.py"]}
+  ]
+}

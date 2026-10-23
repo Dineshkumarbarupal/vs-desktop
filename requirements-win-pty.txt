@@ -1,0 +1,7 @@
+# Optional: enables a Windows pseudo-terminal for the integrated shell.
+# The app falls back to pipe mode if WinPTY is not installed.
+pywinpty>=2.0.13; platform_system == "Windows"
+
+git add .
+git commit -m "Upload FlowCode Studio v0.34.0 source"
+git push origin main
